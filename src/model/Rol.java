@@ -11,20 +11,28 @@ public class Rol {
     private IntegerProperty id;
     private StringProperty nombre;
 
-    public IntegerProperty getId() {
+    public int getId() {
+        return id.get();
+    }
+
+    public void setId(int id) {
+        this.id.set(id);
+    }
+
+    public IntegerProperty idProperty() {
         return id;
     }
 
-    public void setId(IntegerProperty id) {
-        this.id = id;
+    public String getNombre() {
+        return nombre.get();
     }
 
-    public StringProperty getNombre() {
+    public void setNombre(String nombre) {
+        this.nombre.set(nombre);
+    }
+
+    public StringProperty nombreProperty() {
         return nombre;
-    }
-
-    public void setNombre(StringProperty nombre) {
-        this.nombre = nombre;
     }
 
 }

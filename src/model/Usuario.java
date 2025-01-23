@@ -28,52 +28,76 @@ public class Usuario {
         this(0, nombre, apellido, username, password, idRol);
     }
 
-    public IntegerProperty getId() {
+    public int getId() {
+        return id.get();
+    }
+
+    public void setId(int id) {
+        this.id.set(id);
+    }
+
+    public IntegerProperty idProperty() {
         return id;
     }
 
-    public void setId(IntegerProperty id) {
-        this.id = id;
+    public String getNombre() {
+        return nombre.get();
     }
 
-    public StringProperty getNombre() {
+    public void setNombre(String nombre) {
+        this.nombre.set(nombre);
+    }
+
+    public StringProperty nombreProperty() {
         return nombre;
     }
 
-    public void setNombre(StringProperty nombre) {
-        this.nombre = nombre;
+    public String getApellido() {
+        return apellido.get();
     }
 
-    public StringProperty getApellido() {
+    public void setApellido(String apellido) {
+        this.apellido.set(apellido);
+    }
+
+    public StringProperty apellidoProperty() {
         return apellido;
     }
 
-    public void setApellido(StringProperty apellido) {
-        this.apellido = apellido;
+    public String getUsername() {
+        return username.get();
     }
 
-    public StringProperty getUsername() {
+    public void setUsername(String username) {
+        this.username.set(username);
+    }
+
+    public StringProperty usernameProperty() {
         return username;
     }
 
-    public void setUsername(StringProperty username) {
-        this.username = username;
+    public String getPassword() {
+        return password.get();
     }
 
-    public StringProperty getPassword() {
+    public void setPassword(String password) {
+        this.password.set(password);
+    }
+
+    public StringProperty passwordProperty() {
         return password;
     }
 
-    public void setPassword(StringProperty password) {
-        this.password = password;
+    public int getIdRol() {
+        return idRol.get();
     }
 
-    public IntegerProperty getIdRol() {
+    public void setIdRol(int idRol) {
+        this.idRol.set(idRol);
+    }
+
+    public IntegerProperty idRolProperty() {
         return idRol;
-    }
-
-    public void setIdRol(IntegerProperty idRol) {
-        this.idRol = idRol;
     }
 
 }
