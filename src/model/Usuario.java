@@ -3,6 +3,7 @@ package model;
 import javafx.beans.property.*;
 
 /**
+ * Clase que mapea la entidad usuario.
  *
  * @author mafeg
  */
