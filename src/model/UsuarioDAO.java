@@ -3,6 +3,7 @@ package model;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Base64;
 
 /**
  *
@@ -94,12 +95,12 @@ public class UsuarioDAO {
     public Usuario autenticarUsuario(String username, String password) {
         Usuario usuario = null;
         String sql = "SELECT * FROM usuario INNER JOIN rol ON usuario.id_rol = rol.id_rol WHERE BINARY username = ? AND BINARY password = ? LIMIT 1";
-        
+
         try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
+
             pstmt.setString(1, username);
             pstmt.setString(2, password);
-            
+
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     usuario = new Usuario(
@@ -116,18 +117,18 @@ public class UsuarioDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        
+
         return usuario;
     }
-    
+
     public Usuario validarUsername(String username) {
         Usuario usuario = null;
         String sql = "SELECT * FROM usuario INNER JOIN rol ON usuario.id_rol = rol.id_rol WHERE BINARY username = ?";
-        
+
         try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
+
             pstmt.setString(1, username);
-            
+
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     usuario = new Usuario(
@@ -144,7 +145,19 @@ public class UsuarioDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        
+
         return usuario;
     }
+
+    public String cifrarPassword(String password) {
+        String cifrado = Base64.getEncoder().encodeToString(password.getBytes());
+        return cifrado;
+    }
+
+    public String descrifrarPassword(String password) {
+        byte[] decodedBytes = Base64.getDecoder().decode(password);
+        String descifrado = new String(decodedBytes);
+        return descifrado;
+    }
+}
 }

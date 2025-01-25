@@ -33,8 +33,16 @@ public class UsuarioController {
     public void eliminarUsuario(int id) {
         usuarioDAO.eliminarUsuario(id);
     }
-    
+
     public Usuario autenticarUsuario(String username, String password) {
         return usuarioDAO.autenticarUsuario(username, password);
+    }
+
+    public String cifrarPassword(String password) {
+        return usuarioDAO.cifrarPassword(password);
+    }
+
+    public String descrifrarPassword(String password) {
+        return usuarioDAO.descrifrarPassword(password);
     }
 }
