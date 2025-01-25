@@ -120,4 +120,31 @@ public class UsuarioDAO {
         return usuario;
     }
     
+    public Usuario validarUsername(String username) {
+        Usuario usuario = null;
+        String sql = "SELECT * FROM usuario INNER JOIN rol ON usuario.id_rol = rol.id_rol WHERE BINARY username = ?";
+        
+        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setString(1, username);
+            
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    usuario = new Usuario(
+                            rs.getInt("id"),
+                            rs.getString("nombre"),
+                            rs.getString("apellido"),
+                            rs.getString("username"),
+                            rs.getString("password"),
+                            rs.getInt("id_rol"),
+                            rs.getString("nombre_rol")
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        
+        return usuario;
+    }
 }
