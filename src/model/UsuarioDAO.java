@@ -38,7 +38,7 @@ public class UsuarioDAO {
     // Método para listar todos los usuarios almacenados en la base de datos
     public List<Usuario> listarUsuarios() {
         List<Usuario> usuarios = new ArrayList<>();
-        String sql = "SELECT * FROM usuario";
+        String sql = "SELECT * FROM usuario INNER JOIN rol ON usuario.id_rol = rol.id_rol";
         try (Connection conn = getConnection(); Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
                 usuarios.add(new Usuario(
@@ -47,7 +47,8 @@ public class UsuarioDAO {
                         rs.getString("apellido"),
                         rs.getString("username"),
                         rs.getString("password"),
-                        rs.getInt("idRol")
+                        rs.getInt("id_rol"),
+                        rs.getString("nombre_rol")
                 ));
             }
         } catch (SQLException e) {
@@ -65,6 +66,7 @@ public class UsuarioDAO {
             stmt.setString(3, usuario.getUsername());
             stmt.setString(4, usuario.getPassword());
             stmt.setInt(5, usuario.getIdRol());
+            stmt.setInt(6, usuario.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -74,8 +76,7 @@ public class UsuarioDAO {
     // Método para eliminar un usuario de la base de datos
     public void eliminarUsuario(int id) {
         String sql = "DELETE FROM usuario WHERE id = ?";
-        try (Connection conn = getConnection(); 
-                 PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -83,4 +84,40 @@ public class UsuarioDAO {
         }
     }
 
+    /**
+     * Metodo para validar las credenciales del usuario.
+     *
+     * @param username Nombre de usuario.
+     * @param password Contrasena del usuario.
+     * @return Usuario
+     */
+    public Usuario autenticarUsuario(String username, String password) {
+        Usuario usuario = null;
+        String sql = "SELECT * FROM usuario INNER JOIN rol ON usuario.id_rol = rol.id_rol WHERE BINARY username = ? AND BINARY password = ? LIMIT 1";
+        
+        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setString(1, username);
+            pstmt.setString(2, password);
+            
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    usuario = new Usuario(
+                            rs.getInt("id"),
+                            rs.getString("nombre"),
+                            rs.getString("apellido"),
+                            rs.getString("username"),
+                            rs.getString("password"),
+                            rs.getInt("id_rol"),
+                            rs.getString("nombre_rol")
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        
+        return usuario;
+    }
+    
 }

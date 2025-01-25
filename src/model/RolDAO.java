@@ -40,8 +40,8 @@ public class RolDAO {
         try (Connection conn = getConnection(); Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
                 roles.add(new Rol(
-                        rs.getInt("id"),
-                        rs.getString("nombre")
+                        rs.getInt("id_rol"),
+                        rs.getString("nombre_rol")
                 ));
             }
         } catch (SQLException e) {

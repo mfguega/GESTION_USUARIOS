@@ -9,36 +9,36 @@ import javafx.beans.property.*;
  */
 public class Rol {
 
-    private IntegerProperty id;
-    private StringProperty nombre;
+    private IntegerProperty idRol;
+    private StringProperty nombreRol;
 
-    public Rol(int id, String nombre) {
-        this.id = new SimpleIntegerProperty(id);
-        this.nombre = new SimpleStringProperty(nombre);
+    public Rol(int idRol, String nombreRol) {
+        this.idRol = new SimpleIntegerProperty(idRol);
+        this.nombreRol = new SimpleStringProperty(nombreRol);
     }
 
-    public int getId() {
-        return id.get();
+    public int getIdRol() {
+        return idRol.get();
     }
 
-    public void setId(int id) {
-        this.id.set(id);
+    public void setIdRol(int id) {
+        this.idRol.set(id);
     }
 
-    public IntegerProperty idProperty() {
-        return id;
+    public IntegerProperty idRolProperty() {
+        return idRol;
     }
 
-    public String getNombre() {
-        return nombre.get();
+    public String getNombreRol() {
+        return nombreRol.get();
     }
 
-    public void setNombre(String nombre) {
-        this.nombre.set(nombre);
+    public void setNombreRol(String nombreRol) {
+        this.nombreRol.set(nombreRol);
     }
 
     public StringProperty nombreProperty() {
-        return nombre;
+        return nombreRol;
     }
 
 }

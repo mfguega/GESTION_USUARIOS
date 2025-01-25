@@ -16,8 +16,8 @@ public class UsuarioController {
         this.usuarioDAO = new UsuarioDAO();
     }
 
-    public void registrarUsuario(String nombre, String apellido, String username, String password, int id_rol) {
-        Usuario usuario = new Usuario(nombre, apellido, username, password, id_rol);
+    public void registrarUsuario(String nombre, String apellido, String username, String password, int idRol, String nombreRol) {
+        Usuario usuario = new Usuario(nombre, apellido, username, password, idRol, nombreRol);
         usuarioDAO.registrarUsuario(usuario);
     }
 
@@ -25,12 +25,16 @@ public class UsuarioController {
         return usuarioDAO.listarUsuarios();
     }
 
-    public void actualizarUsuario(String nombre, String apellido, String username, String password, int id_rol) {
-        Usuario usuario = new Usuario(nombre, apellido, username, password, id_rol);
+    public void actualizarUsuario(String nombre, String apellido, String username, String password, int idRol, String nombreRol) {
+        Usuario usuario = new Usuario(nombre, apellido, username, password, idRol, nombreRol);
         usuarioDAO.actualizarUsuario(usuario);
     }
 
     public void eliminarUsuario(int id) {
         usuarioDAO.eliminarUsuario(id);
+    }
+    
+    public Usuario autenticarUsuario(String username, String password) {
+        return usuarioDAO.autenticarUsuario(username, password);
     }
 }

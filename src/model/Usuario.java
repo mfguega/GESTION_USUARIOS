@@ -15,18 +15,20 @@ public class Usuario {
     private StringProperty username;
     private StringProperty password;
     private IntegerProperty idRol;
+    private StringProperty nombreRol;
 
-    public Usuario(int id, String nombre, String apellido, String username, String password, int idRol) {
+    public Usuario(int id, String nombre, String apellido, String username, String password, int idRol, String nombreRol) {
         this.id = new SimpleIntegerProperty(id);
         this.nombre = new SimpleStringProperty(nombre);
         this.apellido = new SimpleStringProperty(apellido);
         this.username = new SimpleStringProperty(username);
         this.password = new SimpleStringProperty(password);
         this.idRol = new SimpleIntegerProperty(idRol);
+        this.nombreRol = new SimpleStringProperty(nombreRol);
     }
 
-    public Usuario(String nombre, String apellido, String username, String password, int idRol) {
-        this(0, nombre, apellido, username, password, idRol);
+    public Usuario(String nombre, String apellido, String username, String password, int idRol, String nombreRol) {
+        this(0, nombre, apellido, username, password, idRol, nombreRol);
     }
 
     public int getId() {
@@ -99,6 +101,18 @@ public class Usuario {
 
     public IntegerProperty idRolProperty() {
         return idRol;
+    }
+
+    public String getNombreRol() {
+        return nombreRol.get();
+    }
+
+    public void setNombreRol(String nombreRol) {
+        this.nombreRol.set(nombreRol);
+    }
+
+    public StringProperty nombreRolProperty() {
+        return nombreRol;
     }
 
 }
