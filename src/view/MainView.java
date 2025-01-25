@@ -2,20 +2,28 @@ package view;
 
 import controller.RolController;
 import controller.UsuarioController;
-import java.util.List;
 import javafx.application.Application;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.PasswordField;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
@@ -37,6 +45,9 @@ public class MainView extends Application {
 
     private Image verIcon;
     private Image ocultarIcon;
+    
+    private TableView<Usuario> tablaUsuarios;
+    private ObservableList<Usuario> dataUsuario;
 
     public static void main(String[] args) {
         launch(args);
@@ -94,7 +105,6 @@ public class MainView extends Application {
     }
 
     private void validarUsuario(String username, String password) {
-        List<Rol> roles = this.rolController.listarRoles();
         Usuario usuario = usuarioController.autenticarUsuario(username, password);
         if (usuario == null) {
             this.mostrarAlerta("Usuario no autorizado");
@@ -110,12 +120,94 @@ public class MainView extends Application {
     }
 
     private void vistaAdministrador(Usuario usuario) {
-        Stage gestionUsuario = new Stage();
-        GridPane gridPanel = new GridPane();
-        Scene scene = new Scene(gridPanel, 800, 600);
-        gestionUsuario.setTitle("Gestion de Usuarios - Administador");
-        gestionUsuario.setScene(scene);
-        gestionUsuario.show();
+        Stage gestionAdministrador = new Stage();
+
+        tablaUsuarios = new TableView<>();
+        actualizarTabla();
+
+        TableColumn<Usuario, String> nombreCol = new TableColumn<>("Nombre");
+        nombreCol.setCellValueFactory(cellData -> cellData.getValue().nombreProperty());
+
+        TableColumn<Usuario, String> apellidoCol = new TableColumn<>("Apellido");
+        apellidoCol.setCellValueFactory(cellData -> cellData.getValue().apellidoProperty());
+
+        TableColumn<Usuario, String> rolCol = new TableColumn<>("Rol");
+        rolCol.setCellValueFactory(cellData -> cellData.getValue().nombreRolProperty());
+
+        TableColumn<Usuario, String> usernameCol = new TableColumn<>("Username");
+        usernameCol.setCellValueFactory(cellData -> cellData.getValue().usernameProperty());
+
+        TableColumn<Usuario, Void> editarCol = new TableColumn<>("Editar");
+        TableColumn<Usuario, Void> eliminarCol = new TableColumn<>("Eliminar");
+
+        editarCol.setCellFactory(col -> new TableCell<>() {
+            private final Button editarBtn = new Button("Editar");
+
+            {
+                editarBtn.setOnAction(e -> {
+                    Usuario usuario = getTableView().getItems().get(getIndex());
+                    vistaForm(usuario, gestionAdministrador);
+                });
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    setGraphic(editarBtn);
+                }
+            }
+        });
+
+        eliminarCol.setCellFactory(col -> new TableCell<>() {
+            private final Button eliminarBtn = new Button("Eliminar");
+
+            {
+                eliminarBtn.setOnAction(e -> {
+                    Usuario usuario = getTableView().getItems().get(getIndex());
+                    Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
+                    confirmacion.setTitle("Confirmación de Eliminación");
+                    confirmacion.setHeaderText("¿Estás seguro de que deseas eliminar a este usuario?");
+                    confirmacion.setContentText("Username: " + usuario.getNombreRol());
+
+                    confirmacion.showAndWait().ifPresent(response -> {
+                        if (response == ButtonType.OK) {
+                            usuarioController.eliminarUsuario(usuario.getId());
+                            actualizarTabla();
+                            mostrarConfirmacion("Eliminación exitosa", "Operación realizada", "El usuario fue eliminado con éxito.");
+                        }
+                    });
+                });
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    setGraphic(eliminarBtn);
+                }
+            }
+        });
+
+        tablaUsuarios.getColumns().addAll(nombreCol, apellidoCol, usernameCol, rolCol, editarCol, eliminarCol);
+        Button nuevo = new Button("Nuevo");
+        nuevo.setOnAction(e -> vistaForm(null, gestionAdministrador));
+        Button logout = new Button("Cerrar Sesión");
+        logout.setOnAction(e -> logout(gestionAdministrador));
+        HBox hbox = new HBox(20);
+        hbox.getChildren().addAll(nuevo, logout);
+        hbox.setAlignment(Pos.TOP_RIGHT);
+        VBox admin = new VBox(20);
+        admin.getChildren().addAll(hbox, tablaUsuarios);
+        admin.setPadding(new Insets(10, 10, 10, 10));
+        Scene scene = new Scene(admin, 508, 480);
+        gestionAdministrador.setTitle("Gestion de Usuarios - Administador");
+        gestionAdministrador.setScene(scene);
+        gestionAdministrador.show();
     }
 
     private void vistaUsuario(Usuario usuario) {
@@ -185,19 +277,19 @@ public class MainView extends Application {
         formPanel.add(apellidoTextField, 1, 1);
 
         Label passwordLabel = new Label("Contraseña:");
-        formPanel.add(passwordLabel, 0, 2);
+        formPanel.add(passwordLabel, 0, registro ? 3 : 2);
         PasswordField passwordField = new PasswordField();
-        formPanel.add(passwordField, 1, 2);
+        formPanel.add(passwordField, 1, registro ? 3 : 2);
         TextField passwordTextField = new TextField();
-        formPanel.add(passwordTextField, 1, 2);
+        formPanel.add(passwordTextField, 1, registro ? 3 : 2);
         passwordTextField.setVisible(false);
 
         Label confirmarLabel = new Label("Confirmar Contraseña:");
-        formPanel.add(confirmarLabel, 0, 3);
+        formPanel.add(confirmarLabel, 0, registro ? 4 : 3);
         PasswordField confirmarField = new PasswordField();
-        formPanel.add(confirmarField, 1, 3);
+        formPanel.add(confirmarField, 1, registro ? 4 : 3);
         TextField confirmarTextField = new TextField();
-        formPanel.add(confirmarTextField, 1, 3);
+        formPanel.add(confirmarTextField, 1, registro ? 4 : 3);
         confirmarTextField.setVisible(false);
 
         ImageView passwordView = new ImageView(verIcon);
@@ -210,19 +302,35 @@ public class MainView extends Application {
         Button passwordButton = new Button();
         passwordButton.setStyle("-fx-background-color: transparent; -fx-border-color: transparent;");
         passwordButton.setGraphic(passwordView);
-        formPanel.add(passwordButton, 2, 2);
+        formPanel.add(passwordButton, 2, registro ? 3 : 2);
         Button confirmarButton = new Button();
         confirmarButton.setStyle("-fx-background-color: transparent; -fx-border-color: transparent;");
         confirmarButton.setGraphic(confirmarView);
-        formPanel.add(confirmarButton, 2, 3);
+        formPanel.add(confirmarButton, 2, registro ? 4 : 3);
 
         passwordButton.setOnAction(e -> ocultarMostrar(passwordField, passwordTextField, passwordButton, passwordView));
         confirmarButton.setOnAction(e -> ocultarMostrar(confirmarField, confirmarTextField, confirmarButton, confirmarView));
 
         Button accionButton = new Button("");
-        
+
         if (registro) {
             accionButton.setText("Guardar");
+            ObservableList<Rol> items = FXCollections.observableArrayList(rolController.listarRoles());
+            ComboBox<Rol> roles = new ComboBox<>(items);
+            roles.setCellFactory(lv -> new ListCell<Rol>() {
+                @Override
+                protected void updateItem(Rol item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(item != null ? item.getNombreRol() : "");
+                }
+            });
+            roles.setOnAction(e -> {
+                Rol rol = roles.getValue();
+                System.out.print(rol.getIdRol());
+            });
+            Label rolLabel = new Label("Rol:");
+            formPanel.add(rolLabel, 0, 2);
+            formPanel.add(roles, 1, 2);
         } else {
             nombreTextField.setText(usuario.getNombre());
             apellidoTextField.setText(usuario.getApellido());
@@ -231,34 +339,33 @@ public class MainView extends Application {
             accionButton.setOnAction(e -> {
                 Boolean validacion = true;
                 if (nombreTextField.getText().isEmpty() || apellidoTextField.getText().isEmpty() || !passwordField.getText().isEmpty() || !confirmarField.getText().isEmpty()) {
-                    if (nombreTextField.getText().isEmpty() || apellidoTextField.getText().isEmpty()){
+                    if (nombreTextField.getText().isEmpty() || apellidoTextField.getText().isEmpty()) {
                         validacion = false;
                         this.mostrarAlerta("Debe diligenciar los datos");
-                    }
-                    else if(!passwordField.getText().isEmpty() || !confirmarField.getText().isEmpty()){
-                        if (!passwordField.getText().equals(confirmarField.getText())){
+                    } else if (!passwordField.getText().isEmpty() || !confirmarField.getText().isEmpty()) {
+                        if (!passwordField.getText().equals(confirmarField.getText())) {
                             validacion = false;
-                            this.mostrarAlerta("Contraseñas no coinciden");   
+                            this.mostrarAlerta("Contraseñas no coinciden");
                         }
                     } else {
                         validacion = true;
                     }
                 }
-                if (validacion){
+                if (validacion) {
                     String contrasena = "";
-                    if (passwordField.getText().isEmpty()){
+                    if (passwordField.getText().isEmpty()) {
                         contrasena = usuario.getPassword();
                     } else {
                         contrasena = passwordField.getText();
                     }
                     usuarioController.actualizarUsuario(
-                        nombreTextField.getText(), 
-                        apellidoTextField.getText(), 
-                        usuario.getUsername(), 
-                        contrasena, 
-                        usuario.getIdRol(), 
-                        usuario.getNombreRol(),
-                        usuario.getId()
+                            nombreTextField.getText(),
+                            apellidoTextField.getText(),
+                            usuario.getUsername(),
+                            contrasena,
+                            usuario.getIdRol(),
+                            usuario.getNombreRol(),
+                            usuario.getId()
                     );
                     mostrarConfirmacion("Actualización exitosa", "Usuario " + usuario.getUsername(), "Ha sido actualizado exitosamente");
                     stageForm.close();
@@ -272,11 +379,11 @@ public class MainView extends Application {
         accionVolver.setOnAction(e -> {
             stageForm.close();
             stageSecundario.show();
-         });
+        });
         HBox buttonBox = new HBox(25);
         buttonBox.getChildren().addAll(accionButton, accionVolver);
         formPanel.add(buttonBox, 1, 5);
-        
+
         stageForm.setOnCloseRequest(event -> {
             stageSecundario.show();
             stageForm.close();
@@ -321,5 +428,10 @@ public class MainView extends Application {
         alert.setHeaderText(cabecera);
         alert.setContentText(mensaje);
         alert.showAndWait();
+    }
+
+    private void actualizarTabla() {
+        dataUsuario = FXCollections.observableArrayList(usuarioController.listarUsuarios());
+        tablaUsuarios.setItems(dataUsuario);
     }
 }

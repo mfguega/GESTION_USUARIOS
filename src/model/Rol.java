@@ -41,4 +41,9 @@ public class Rol {
         return nombreRol;
     }
 
+    @Override
+    public String toString() {
+        return nombreRol.get();
+    }
+
 }
