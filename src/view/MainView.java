@@ -15,6 +15,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
@@ -219,16 +220,67 @@ public class MainView extends Application {
         confirmarButton.setOnAction(e -> ocultarMostrar(confirmarField, confirmarTextField, confirmarButton, confirmarView));
 
         Button accionButton = new Button("");
-
+        
         if (registro) {
             accionButton.setText("Guardar");
         } else {
-            passwordLabel.setText("Nueva Contraseña");
-            accionButton.setText("Editar");
             nombreTextField.setText(usuario.getNombre());
             apellidoTextField.setText(usuario.getApellido());
+            passwordLabel.setText("Nueva Contraseña");
+            accionButton.setText("Editar");
+            accionButton.setOnAction(e -> {
+                Boolean validacion = true;
+                if (nombreTextField.getText().isEmpty() || apellidoTextField.getText().isEmpty() || !passwordField.getText().isEmpty() || !confirmarField.getText().isEmpty()) {
+                    if (nombreTextField.getText().isEmpty() || apellidoTextField.getText().isEmpty()){
+                        validacion = false;
+                        this.mostrarAlerta("Debe diligenciar los datos");
+                    }
+                    else if(!passwordField.getText().isEmpty() || !confirmarField.getText().isEmpty()){
+                        if (!passwordField.getText().equals(confirmarField.getText())){
+                            validacion = false;
+                            this.mostrarAlerta("Contraseñas no coinciden");   
+                        }
+                    } else {
+                        validacion = true;
+                    }
+                }
+                if (validacion){
+                    String contrasena = "";
+                    if (passwordField.getText().isEmpty()){
+                        contrasena = usuario.getPassword();
+                    } else {
+                        contrasena = passwordField.getText();
+                    }
+                    usuarioController.actualizarUsuario(
+                        nombreTextField.getText(), 
+                        apellidoTextField.getText(), 
+                        usuario.getUsername(), 
+                        contrasena, 
+                        usuario.getIdRol(), 
+                        usuario.getNombreRol(),
+                        usuario.getId()
+                    );
+                    mostrarConfirmacion("Actualización exitosa", "Usuario " + usuario.getUsername(), "Ha sido actualizado exitosamente");
+                    stageForm.close();
+                    Usuario usuarionuevo = usuarioController.autenticarUsuario(usuario.getUsername(), contrasena);
+                    vistaUsuario(usuarionuevo);
+                }
+            });
         }
-        formPanel.add(accionButton, 1, 5);
+        Button accionVolver = new Button("");
+        accionVolver.setText("Volver");
+        accionVolver.setOnAction(e -> {
+            stageForm.close();
+            stageSecundario.show();
+         });
+        HBox buttonBox = new HBox(25);
+        buttonBox.getChildren().addAll(accionButton, accionVolver);
+        formPanel.add(buttonBox, 1, 5);
+        
+        stageForm.setOnCloseRequest(event -> {
+            stageSecundario.show();
+            stageForm.close();
+        });
 
         Scene scene = new Scene(formPanel, 350, 200);
         stageForm.setTitle("Usuario");

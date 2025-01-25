@@ -25,8 +25,8 @@ public class UsuarioController {
         return usuarioDAO.listarUsuarios();
     }
 
-    public void actualizarUsuario(String nombre, String apellido, String username, String password, int idRol, String nombreRol) {
-        Usuario usuario = new Usuario(nombre, apellido, username, password, idRol, nombreRol);
+    public void actualizarUsuario(String nombre, String apellido, String username, String password, int idRol, String nombreRol, int id) {
+        Usuario usuario = new Usuario(id, nombre, apellido, username, password, idRol, nombreRol);
         usuarioDAO.actualizarUsuario(usuario);
     }
 
