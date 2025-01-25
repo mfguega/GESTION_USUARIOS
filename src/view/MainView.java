@@ -2,6 +2,7 @@ package view;
 
 import controller.RolController;
 import controller.UsuarioController;
+import java.util.List;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -45,7 +46,7 @@ public class MainView extends Application {
 
     private Image verIcon;
     private Image ocultarIcon;
-    
+
     private TableView<Usuario> tablaUsuarios;
     private ObservableList<Usuario> dataUsuario;
 
@@ -105,21 +106,22 @@ public class MainView extends Application {
     }
 
     private void validarUsuario(String username, String password) {
-        Usuario usuario = usuarioController.autenticarUsuario(username, password);
+        String passwordB64 = usuarioController.cifrarPassword(password);
+        Usuario usuario = usuarioController.autenticarUsuario(username, passwordB64);
         if (usuario == null) {
             this.mostrarAlerta("Usuario no autorizado");
         } else {
             primaryStage.hide();
             mostrarConfirmacion("Ingreso Exitoso", "Hola, " + usuario.getNombre(), "Ha iniciado sesión correctamente");
             if (usuario.getIdRol() == 1) {
-                vistaAdministrador(usuario);
+                vistaAdministrador();
             } else {
                 vistaUsuario(usuario);
             }
         }
     }
 
-    private void vistaAdministrador(Usuario usuario) {
+    private void vistaAdministrador() {
         Stage gestionAdministrador = new Stage();
 
         tablaUsuarios = new TableView<>();
@@ -146,7 +148,7 @@ public class MainView extends Application {
             {
                 editarBtn.setOnAction(e -> {
                     Usuario usuario = getTableView().getItems().get(getIndex());
-                    vistaForm(usuario, gestionAdministrador);
+                    vistaForm(usuario, gestionAdministrador, true);
                 });
             }
 
@@ -170,7 +172,7 @@ public class MainView extends Application {
                     Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
                     confirmacion.setTitle("Confirmación de Eliminación");
                     confirmacion.setHeaderText("¿Estás seguro de que deseas eliminar a este usuario?");
-                    confirmacion.setContentText("Username: " + usuario.getNombreRol());
+                    confirmacion.setContentText("Username: " + usuario.getUsername());
 
                     confirmacion.showAndWait().ifPresent(response -> {
                         if (response == ButtonType.OK) {
@@ -195,7 +197,7 @@ public class MainView extends Application {
 
         tablaUsuarios.getColumns().addAll(nombreCol, apellidoCol, usernameCol, rolCol, editarCol, eliminarCol);
         Button nuevo = new Button("Nuevo");
-        nuevo.setOnAction(e -> vistaForm(null, gestionAdministrador));
+        nuevo.setOnAction(e -> vistaForm(null, gestionAdministrador, true));
         Button logout = new Button("Cerrar Sesión");
         logout.setOnAction(e -> logout(gestionAdministrador));
         HBox hbox = new HBox(20);
@@ -252,17 +254,17 @@ public class MainView extends Application {
         stageUsuario.setScene(scene);
         stageUsuario.show();
 
-        editButton.setOnAction(e -> vistaForm(usuario, stageUsuario));
+        editButton.setOnAction(e -> vistaForm(usuario, stageUsuario, false));
         logoutButton.setOnAction(e -> logout(stageUsuario));
 
     }
 
-    private void vistaForm(Usuario usuario, Stage stageSecundario) {
+    private void vistaForm(Usuario usuario, Stage stageSecundario, boolean admin) {
         stageSecundario.hide();
         boolean registro = usuario == null;
         Stage stageForm = new Stage();
         GridPane formPanel = new GridPane();
-        formPanel.setPadding(new Insets(10, 10, 10, 10));
+        formPanel.setPadding(new Insets(20, 20, 20, 20));
         formPanel.setVgap(8);
         formPanel.setHgap(10);
 
@@ -277,20 +279,34 @@ public class MainView extends Application {
         formPanel.add(apellidoTextField, 1, 1);
 
         Label passwordLabel = new Label("Contraseña:");
-        formPanel.add(passwordLabel, 0, registro ? 3 : 2);
+        formPanel.add(passwordLabel, 0, registro ? 4 : admin ? 3 : 2);
         PasswordField passwordField = new PasswordField();
-        formPanel.add(passwordField, 1, registro ? 3 : 2);
+        formPanel.add(passwordField, 1, registro ? 4 : admin ? 3 : 2);
         TextField passwordTextField = new TextField();
-        formPanel.add(passwordTextField, 1, registro ? 3 : 2);
+        formPanel.add(passwordTextField, 1, registro ? 4 : admin ? 3 : 2);
         passwordTextField.setVisible(false);
+        
+        passwordField.textProperty().addListener((observable, oldValue, newValue) -> {
+            passwordTextField.setText(newValue);
+        });
+        passwordTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+            passwordField.setText(newValue);
+        });
 
         Label confirmarLabel = new Label("Confirmar Contraseña:");
-        formPanel.add(confirmarLabel, 0, registro ? 4 : 3);
+        formPanel.add(confirmarLabel, 0, registro ? 5 : admin ? 4 : 3);
         PasswordField confirmarField = new PasswordField();
-        formPanel.add(confirmarField, 1, registro ? 4 : 3);
+        formPanel.add(confirmarField, 1, registro ? 5 : admin ? 4 : 3);
         TextField confirmarTextField = new TextField();
-        formPanel.add(confirmarTextField, 1, registro ? 4 : 3);
+        formPanel.add(confirmarTextField, 1, registro ? 5 : admin ? 4 : 3);
         confirmarTextField.setVisible(false);
+        
+        confirmarField.textProperty().addListener((observable, oldValue, newValue) -> {
+            confirmarTextField.setText(newValue);
+        });
+        confirmarTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+            confirmarField.setText(newValue);
+        });
 
         ImageView passwordView = new ImageView(verIcon);
         passwordView.setFitWidth(20);
@@ -302,21 +318,24 @@ public class MainView extends Application {
         Button passwordButton = new Button();
         passwordButton.setStyle("-fx-background-color: transparent; -fx-border-color: transparent;");
         passwordButton.setGraphic(passwordView);
-        formPanel.add(passwordButton, 2, registro ? 3 : 2);
+        formPanel.add(passwordButton, 2, registro ? 4 : admin ? 3 : 2);
         Button confirmarButton = new Button();
         confirmarButton.setStyle("-fx-background-color: transparent; -fx-border-color: transparent;");
         confirmarButton.setGraphic(confirmarView);
-        formPanel.add(confirmarButton, 2, registro ? 4 : 3);
+        formPanel.add(confirmarButton, 2, registro ? 5 : admin ? 4 : 3);
 
         passwordButton.setOnAction(e -> ocultarMostrar(passwordField, passwordTextField, passwordButton, passwordView));
         confirmarButton.setOnAction(e -> ocultarMostrar(confirmarField, confirmarTextField, confirmarButton, confirmarView));
 
         Button accionButton = new Button("");
+        ComboBox<Rol> roles = new ComboBox<>();
+        TextField usernameTextField = new TextField();
 
         if (registro) {
             accionButton.setText("Guardar");
             ObservableList<Rol> items = FXCollections.observableArrayList(rolController.listarRoles());
-            ComboBox<Rol> roles = new ComboBox<>(items);
+            roles.setItems(items);
+            roles.setPrefWidth(150);
             roles.setCellFactory(lv -> new ListCell<Rol>() {
                 @Override
                 protected void updateItem(Rol item, boolean empty) {
@@ -324,55 +343,40 @@ public class MainView extends Application {
                     setText(item != null ? item.getNombreRol() : "");
                 }
             });
-            roles.setOnAction(e -> {
-                Rol rol = roles.getValue();
-                System.out.print(rol.getIdRol());
-            });
             Label rolLabel = new Label("Rol:");
             formPanel.add(rolLabel, 0, 2);
             formPanel.add(roles, 1, 2);
+            Label usernameLabel = new Label("Username:");
+            formPanel.add(usernameLabel, 0, 3);
+            formPanel.add(usernameTextField, 1, 3);
         } else {
             nombreTextField.setText(usuario.getNombre());
             apellidoTextField.setText(usuario.getApellido());
             passwordLabel.setText("Nueva Contraseña");
             accionButton.setText("Editar");
-            accionButton.setOnAction(e -> {
-                Boolean validacion = true;
-                if (nombreTextField.getText().isEmpty() || apellidoTextField.getText().isEmpty() || !passwordField.getText().isEmpty() || !confirmarField.getText().isEmpty()) {
-                    if (nombreTextField.getText().isEmpty() || apellidoTextField.getText().isEmpty()) {
-                        validacion = false;
-                        this.mostrarAlerta("Debe diligenciar los datos");
-                    } else if (!passwordField.getText().isEmpty() || !confirmarField.getText().isEmpty()) {
-                        if (!passwordField.getText().equals(confirmarField.getText())) {
-                            validacion = false;
-                            this.mostrarAlerta("Contraseñas no coinciden");
-                        }
-                    } else {
-                        validacion = true;
+            if (admin) {
+                List<Rol> listRol = rolController.listarRoles();
+                ObservableList<Rol> items = FXCollections.observableArrayList(listRol);
+                roles.setItems(items);
+                roles.setPrefWidth(150);
+                roles.setCellFactory(lv -> new ListCell<Rol>() {
+                    @Override
+                    protected void updateItem(Rol item, boolean empty) {
+                        super.updateItem(item, empty);
+                        setText(item != null ? item.getNombreRol() : "");
+                    }
+                });
+                Label rolLabel = new Label("Rol:");
+                formPanel.add(rolLabel, 0, 2);
+                formPanel.add(roles, 1, 2);
+                Rol seleccion = null;
+                for (Rol rol : listRol) {
+                    if (rol.getIdRol() == usuario.getIdRol()) {
+                        seleccion = rol;
                     }
                 }
-                if (validacion) {
-                    String contrasena = "";
-                    if (passwordField.getText().isEmpty()) {
-                        contrasena = usuario.getPassword();
-                    } else {
-                        contrasena = passwordField.getText();
-                    }
-                    usuarioController.actualizarUsuario(
-                            nombreTextField.getText(),
-                            apellidoTextField.getText(),
-                            usuario.getUsername(),
-                            contrasena,
-                            usuario.getIdRol(),
-                            usuario.getNombreRol(),
-                            usuario.getId()
-                    );
-                    mostrarConfirmacion("Actualización exitosa", "Usuario " + usuario.getUsername(), "Ha sido actualizado exitosamente");
-                    stageForm.close();
-                    Usuario usuarionuevo = usuarioController.autenticarUsuario(usuario.getUsername(), contrasena);
-                    vistaUsuario(usuarionuevo);
-                }
-            });
+                roles.setValue(seleccion);
+            }
         }
         Button accionVolver = new Button("");
         accionVolver.setText("Volver");
@@ -382,14 +386,103 @@ public class MainView extends Application {
         });
         HBox buttonBox = new HBox(25);
         buttonBox.getChildren().addAll(accionButton, accionVolver);
-        formPanel.add(buttonBox, 1, 5);
+        formPanel.add(buttonBox, 1, registro ? 7 : 6);
 
         stageForm.setOnCloseRequest(event -> {
             stageSecundario.show();
             stageForm.close();
         });
 
-        Scene scene = new Scene(formPanel, 350, 200);
+        accionButton.setOnAction(e -> {
+            Boolean validacion = true;
+            if (registro) {
+                if (nombreTextField.getText().isEmpty() || apellidoTextField.getText().isEmpty() || roles.getValue() == null || usernameTextField.getText().isEmpty() || passwordField.getText().isEmpty() || confirmarField.getText().isEmpty()) {
+                    validacion = false;
+                    this.mostrarAlerta("Debe diligenciar los datos");
+                } else if (!passwordField.getText().equals(confirmarField.getText())) {
+                    validacion = false;
+                    this.mostrarAlerta("Contraseñas no coinciden");
+                } else {
+                    Usuario existe = usuarioController.validarUsername(usernameTextField.getText());
+                    if (existe == null) {
+                        if (passwordField.getText().length() < 6) {
+                            this.mostrarAlerta("La contraseña debe contener al menos 6 caracteres");
+                            validacion = false;
+                        } else {
+                            validacion = true;
+                        }
+                    } else {
+                        validacion = false;
+                        this.mostrarAlerta("El username ya existe");
+                    }
+                }
+
+            } else {
+                if (nombreTextField.getText().isEmpty() || apellidoTextField.getText().isEmpty() || (admin && roles.getValue() == null)) {
+                    validacion = false;
+                    this.mostrarAlerta("Debe diligenciar los datos");
+                } else if (!passwordField.getText().isEmpty() || !confirmarField.getText().isEmpty()) {
+                    if (!passwordField.getText().equals(confirmarField.getText())) {
+                        validacion = false;
+                        this.mostrarAlerta("Contraseñas no coinciden");
+                    } else if (passwordField.getText().length() < 6) {
+                        validacion = false;
+                        this.mostrarAlerta("La contraseña debe contener al menos 6 caracteres");
+                    } else {
+                        validacion = true;
+                    }
+                } else {
+                    validacion = true;
+                }
+            }
+
+            if (validacion) {
+                if (registro) {
+                    Rol rol = roles.getValue();
+                    String password = usuarioController.cifrarPassword(passwordField.getText());
+                    usuarioController.registrarUsuario(
+                            nombreTextField.getText(),
+                            apellidoTextField.getText(),
+                            usernameTextField.getText(),
+                            password,
+                            rol.getIdRol(),
+                            rol.getNombreRol()
+                    );
+                    mostrarConfirmacion("Registro exitoso", "El usuario " + nombreTextField.getText(), "Ha sido creado exitosamente");
+                    stageForm.close();
+                    vistaAdministrador();
+                } else {
+                    String contrasena = "";
+                    if (passwordField.getText().isEmpty()) {
+                        contrasena = usuario.getPassword();
+                    } else {
+                        contrasena = usuarioController.cifrarPassword(passwordField.getText());
+                    }
+                    usuarioController.actualizarUsuario(
+                            nombreTextField.getText(),
+                            apellidoTextField.getText(),
+                            usuario.getUsername(),
+                            contrasena,
+                            admin ? roles.getValue().getIdRol() : usuario.getIdRol(),
+                            admin ? roles.getValue().getNombreRol() : usuario.getNombreRol(),
+                            usuario.getId()
+                    );
+                    mostrarConfirmacion("Actualización exitosa", "Usuario " + usuario.getUsername(), "Ha sido actualizado exitosamente");
+                    stageForm.close();
+                    if (admin) {
+                        stageForm.close();
+                        vistaAdministrador();
+                    } else {
+                        Usuario usuarionuevo = usuarioController.autenticarUsuario(usuario.getUsername(), contrasena);
+                        stageForm.close();
+                        vistaUsuario(usuarionuevo);
+                    }
+                }
+
+            }
+        });
+
+        Scene scene = new Scene(formPanel, 370, admin ? 290 : 250);
         stageForm.setTitle("Usuario");
         stageForm.setScene(scene);
         stageForm.show();

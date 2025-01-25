@@ -37,6 +37,10 @@ public class UsuarioController {
     public Usuario autenticarUsuario(String username, String password) {
         return usuarioDAO.autenticarUsuario(username, password);
     }
+    
+    public Usuario validarUsername(String username) {
+        return usuarioDAO.validarUsername(username);
+    }
 
     public String cifrarPassword(String password) {
         return usuarioDAO.cifrarPassword(password);
